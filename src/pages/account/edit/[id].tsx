@@ -83,8 +83,10 @@ export default function EditListing({ listing }: PageProps) {
     setMsg(null);
     setBusy(true);
     const fd = new FormData(e.currentTarget);
-    const body = {
-      id: listing.id,
+    
+    if (!listing) return;
+const body = {
+      id: (listing as any).id,
       title: String(fd.get("title") || ""),
       location: String(fd.get("location") || ""),
       priceUsd: fd.get("priceUsd") ? Number(fd.get("priceUsd")) : null,
@@ -203,5 +205,6 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
     }
   };
 };
+
 
 
