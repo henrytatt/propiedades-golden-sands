@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await fs.mkdir(uploadDir, { recursive: true });
 
   const form = formidable({ multiples: false, uploadDir, keepExtensions: true });
-  form.parse(req, async (err, fields, files) => {
+  form.parse(req, async (err: unknown, fields: any, files: any) => {
     if (err) return res.status(400).json({ error: "Parse error" });
     const anyFile = (files.file as any) || (files.image as any);
     if (!anyFile) return res.status(400).json({ error: "Archivo no recibido" });
@@ -24,3 +24,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ ok: true, path: publicPath });
   });
 }
+
