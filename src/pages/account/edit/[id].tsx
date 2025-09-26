@@ -36,10 +36,10 @@ export default function EditListing({ listing }: PageProps) {
         <p className="text-gray-600">Publicación no encontrada.</p>
         <Link href="/account" className="text-[#d4af37] underline">Volver a mi cuenta</Link>
             {/* Galería (agregar/eliminar fotos) */}
-      {listing?.id && (
+      {(listing as any)?.id && (
         <MyGalleryEditor
-          listingId={listing.id}
-          initialImages={(listing?.images || []).map((i:any)=>i.url)}
+          listingId={String((listing as any).id)}
+          initialImages={(((listing as any)?.images ?? []) as { url: string }[]).map(i => i.url)}
         />
       )}
 </main>
@@ -167,10 +167,10 @@ export default function EditListing({ listing }: PageProps) {
         {msg && <p className="text-sm mt-2">{msg}</p>}
       </form>
           {/* Galería (agregar/eliminar fotos) */}
-      {listing?.id && (
+      {(listing as any)?.id && (
         <MyGalleryEditor
-          listingId={listing.id}
-          initialImages={(listing?.images || []).map((i:any)=>i.url)}
+          listingId={String((listing as any).id)}
+          initialImages={(((listing as any)?.images ?? []) as { url: string }[]).map(i => i.url)}
         />
       )}
 </main>
@@ -203,4 +203,5 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
     }
   };
 };
+
 
