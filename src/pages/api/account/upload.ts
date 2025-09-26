@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     uploadDir,
     keepExtensions: true,
     multiples: false,
-    filename: (_name, _ext, part) => {
+    filename: (_name: string, _ext: string, part: File): string => {
       const ext = path.extname(part.originalFilename || "").toLowerCase() || ".jpg";
       const base = `avatar_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
       return base + ext;
@@ -35,4 +35,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: "No se pudo subir el archivo" });
   }
 }
+
 
