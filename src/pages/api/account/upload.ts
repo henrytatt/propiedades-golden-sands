@@ -26,14 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const [fields, files] = await form.parse(req);
     const f = files.file as File | File[] | undefined;
     const file = Array.isArray(f) ? f[0] : f;
-    if (!file?.newFilename) return res.status(400).json({ error: "Archivo inválido" });
+    if (!file || !(file as File).newFilename) return res.status(400).json({ error: "Archivo inválido" });
 
     // Ruta pública para usar en <Image src="...">
-    const publicPath = "/uploads/" + file.newFilename;
+    const publicPath = "/uploads/" + (file as File).newFilename!;
     return res.status(200).json({ ok: true, path: publicPath });
   } catch (e) {
     return res.status(500).json({ error: "No se pudo subir el archivo" });
   }
 }
+
 
 
