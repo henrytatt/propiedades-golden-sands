@@ -1,5 +1,6 @@
-﻿import type { NextApiRequest, NextApiResponse } from "next";
-import formidable, { File } from "formidable";
+﻿import formidable, { type Fields, type Files, type File } from "formidable";
+import type { NextApiRequest, NextApiResponse } from "next";
+
 import path from "path";
 import { promises as fs } from "fs";
 
@@ -25,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   try {
-    const { files } = await new Promise<{ fields: formidable.Fields; files: formidable.Files }>((resolve, reject) => {
-      form.parse(req, (err, fields, files) => (err ? reject(err) : resolve({ fields, files })));
+    const { files } = await new Promise<{ fields: Fields; files: Files }>((resolve, reject) => {
+      form.parse(req, (err: any, fields: Fields, files: Files) => (err ? reject(err) : resolve({ fields, files })));
     });
 
     const file = pickFile((files as any).file);
@@ -53,3 +54,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ ok:false, error: e?.message || "SERVER" });
   }
 }
+
