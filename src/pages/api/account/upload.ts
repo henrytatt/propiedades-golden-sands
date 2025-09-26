@@ -1,4 +1,9 @@
-﻿import type { NextApiRequest, NextApiResponse } from "next";
+﻿import formidable from "formidable";
+// Tipos suaves para desbloquear el build en Vercel (evitar dependencias de tipos de formidable)
+type Fields = Record<string, any>;
+type Files  = Record<string, any>;
+type File   = { newFilename?: string; filepath?: string; originalFilename?: string | null };
+import type { NextApiRequest, NextApiResponse } from "next";
 import formidable, { File } from "formidable";
 import path from "path";
 import fs from "fs";
@@ -35,6 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: "No se pudo subir el archivo" });
   }
 }
+
 
 
 
