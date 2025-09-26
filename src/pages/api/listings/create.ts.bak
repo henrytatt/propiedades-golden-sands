@@ -1,0 +1,80 @@
+﻿import type { NextApiRequest, NextApiResponse } from "next";
+import { getUserFromRequest } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+
+type Body = {
+  title?: string;
+  location?: string | null;
+  priceUsd?: number | string | null;
+  image?: string | null;          // portada opcional
+  description?: string | null;    // opcional
+  images?: string[] | null;       // galería opcional (máx 10 total con portada)
+};
+
+const MAX_IMAGES = 10;
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  try {
+    const me = await getUserFromRequest(req);
+    if (!me) return res.status(401).json({ error: "No autorizado" });
+
+    const body: Body = (req.body ?? {}) as any;
+    const title = (body.title ?? "").toString().trim();
+    if (!title) return res.status(400).json({ error: "Falta título" });
+
+    const location = body.location ? String(body.location) : null;
+
+    let priceUsd: number | null = null;
+    if (body.priceUsd !== undefined && body.priceUsd !== null && body.priceUsd !== "") {
+      const n = Number(body.priceUsd);
+      if (!Number.isFinite(n) || n < 0) return res.status(400).json({ error: "Precio inválido" });
+      priceUsd = Math.round(n);
+    }
+
+    const cover = body.image ? String(body.image).trim() : null;
+    const inputGallery = Array.isArray(body.images) ? body.images.map(String).filter(Boolean) : [];
+
+    // Construir galería final (sin duplicar portada)
+    const gallery: string[] = [];
+    for (const u of inputGallery) {
+      if (!u || (cover && u === cover)) continue;
+      gallery.push(u);
+      if (gallery.length >= MAX_IMAGES - (cover ? 1 : 0)) break;
+    }
+
+    // Crear listing + imágenes en transacción
+    const created = await prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.create({
+        data: {
+          title,
+          location,
+          priceUsd,
+          image: cover || null,
+          description: (body.description ?? null) as string | null,
+          ownerId: me.id,
+        },
+        select: { id: true }
+      });
+
+      if (gallery.length) {
+        await tx.listingImage.createMany({
+          data: gallery.map((url, idx) => ({
+            listingId: listing.id,
+            url,
+            order: idx + 1, // portada es implícitamente 0
+          }))
+        });
+      }
+
+      return listing;
+    });
+
+    return res.status(200).json({ ok: true, id: created.id });
+  } catch (err: any) {
+    // LOG para ver el error real en consola del server
+    console.error("CREATE_LISTING_ERROR:", err?.message || err);
+    return res.status(500).json({ error: "SERVER", detail: String(err?.message || err) });
+  }
+}
